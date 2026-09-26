@@ -24,6 +24,9 @@
 *.mod
 *.smod
 
+
+#clion
+.idea/
 # Compiled Static libraries
 *.lai
 *.la

@@ -5,16 +5,17 @@
 
 using namespace sf;
 
-const Keyboard::Key controls[4] = {
+const Keyboard::Key controls[5] = {
     Keyboard::W,
     Keyboard::S,
     Keyboard::Up,
-    Keyboard::Down
+    Keyboard::Down,
+    Keyboard::Escape
 };
 Vector2f ball_velocity;
 bool isPlayer1Serving = true;
-const float initialVelocityX = 100.f; //horizontal velocity
-const float initialVelocityY= 60.f;
+const float initialVelocityX = 130.f; //horizontal velocity
+const float initialVelocityY= 80.f;
 
 const Vector2f paddleSize(25.f, 100.f);
 const float ballRadius = 10.f;
@@ -28,14 +29,18 @@ const float time_step = 0.017f;
 
 const float velocityMultiplier = 1.1f;
 
+bool gameWon = false;
+
 int player1Score = 0;
 int player2Score = 0;
 
 Font font;
 Text text;
+Text winningText;
 
 CircleShape ball;
 RectangleShape paddles[2];
+
 
 void reset() {
     paddles[0].setPosition(
@@ -76,12 +81,18 @@ void init() {
     font.loadFromFile("resources/fonts/RobotoMono-Regular.ttf");
     text.setFont(font);
     text.setCharacterSize(24);
+    winningText.setCharacterSize(30);
+    winningText.setFillColor(sf::Color::Green);
+    winningText.setFont(font);
 
     reset();
 
 }
 
 void update(float dt) {
+    if (gameWon) {
+        return;
+    }
     float leftDirection = 0.0f;
     float rightDirection = 0.0f;
 
@@ -133,7 +144,6 @@ void update(float dt) {
         by < paddles[0].getPosition().y + (paddleSize.y * 0.5)) {
         ball_velocity.x *= -velocityMultiplier;
 
-
     }
     else if (
     bx > gameWidth - paddleSize.x - paddleOffsetWall &&
@@ -143,20 +153,75 @@ void update(float dt) {
     by < paddles[1].getPosition().y + (paddleSize.y * 0.5f)) {
         ball_velocity.x *= -velocityMultiplier;
 
-
          }
+    if (player1Score == 3) {
+        gameWon = true;
+        winningText.setString(
+    "Player 1 Wins!\n"
+        "Final Score: "
+        + std::to_string(player1Score)
+        + " : "
+        + std::to_string(player2Score)
+        + "\nPress ESC to exit"
+);
 
+        // Find the invisible rectangle around the text
+        auto bounds = winningText.getLocalBounds();
 
+        // Make the CENTER of that rectangle the origin
+        winningText.setOrigin({
+            bounds.left + bounds.width / 2.f,
+            bounds.top + bounds.height / 2.f
+        });
+
+        // Put that origin at the center of the window
+        winningText.setPosition({
+            gameWidth / 2.f,
+            gameHeight / 2.f
+        });
+    }
+    else if (player2Score == 3) {
+        gameWon = true;
+        winningText.setString(
+    "Player 2 Wins!\n"
+        "Final Score: "
+        + std::to_string(player2Score)
+        + " : "
+        + std::to_string(player1Score)
+        + "\nPress ESC to exit"
+    );
+
+        // Find the invisible rectangle around the text
+        auto bounds = winningText.getLocalBounds();
+
+        // Make the CENTER of that rectangle the origin
+        winningText.setOrigin({
+            bounds.left + bounds.width / 2.f,
+            bounds.top + bounds.height / 2.f
+        });
+
+        // Put that origin at the center of the window
+        winningText.setPosition({
+            gameWidth / 2.f,
+            gameHeight / 2.f
+        });
+    }
 }
 
 void render(RenderWindow &window) {
-    window.draw(paddles[0]);
-    window.draw(paddles[1]);
-    window.draw(ball);
-    window.draw(text);
+
+    if (gameWon) {
+        // ONLY draw the game-over screen
+        window.draw(winningText);
+    }
+    else {
+        // ONLY draw the game while playing
+        window.draw(paddles[0]);
+        window.draw(paddles[1]);
+        window.draw(ball);
+        window.draw(text);
+    }
 }
-
-
 
 int main () {
 
@@ -168,6 +233,9 @@ int main () {
         Event event;
         while (window.pollEvent(event)) {
             if (event.type == Event::Closed) {
+                window.close();
+            }
+            if (Keyboard::isKeyPressed(controls[4])) {
                 window.close();
             }
         }
@@ -184,5 +252,4 @@ int main () {
         //Wait for Vsync
         window.display();
     }
-
 }
